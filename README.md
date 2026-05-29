@@ -10,25 +10,45 @@ NetworkMonitor is a lightweight macOS menu bar app for keeping an eye on live ne
 - Manual refresh and quit actions from the menu
 - Native SwiftUI menu bar app with no background service dependency
 
-## Download
-
-The first release is packaged as a DMG for GitHub Releases:
-
-- `dist/NetworkMonitor-1.0.0.dmg` for Apple Silicon Macs
-
-After downloading, open the DMG and drag `NetworkMonitor.app` to your Applications folder.
-
-This first build is not notarized. If macOS blocks the app, open it from Finder using Control-click, choose Open, then confirm that you want to run it.
-
 ## Requirements
 
 - macOS 13 Ventura or newer
-- Apple Silicon Mac for the packaged v1.0.0 DMG
-- Swift 6.0 or newer for local development builds
+- Xcode Command Line Tools or Xcode with Swift 6.0 or newer
 
-## Development
+## Build From Source
 
 This project is a Swift Package Manager app.
+
+Clone the repository and enter the project directory:
+
+```bash
+git clone https://github.com/404priyanshu/NetworkMonitor-Swift.git
+cd NetworkMonitor-Swift
+```
+
+Build and launch the menu bar app locally:
+
+```bash
+./script/build_and_run.sh
+```
+
+The helper script builds the Swift package, creates `dist/NetworkMonitor.app`, applies local ad-hoc signing, and opens the app.
+
+Build a release app bundle without launching it:
+
+```bash
+./script/build_and_run.sh --release
+```
+
+The release bundle is written to:
+
+```text
+dist/NetworkMonitor.app
+```
+
+You can move that local app bundle into your Applications folder if you want to keep it installed on your Mac.
+
+## Development
 
 Run the app locally:
 
@@ -42,12 +62,6 @@ Build a release app bundle:
 ./script/build_and_run.sh --release
 ```
 
-Build the release DMG:
-
-```bash
-./script/build_and_run.sh --dmg
-```
-
 Run tests:
 
 ```bash
@@ -59,7 +73,7 @@ swift test
 - `Sources/NetworkMonitor`: macOS app entry point and menu bar UI
 - `Sources/NetworkMonitorCore`: sampling, network counters, disk space, and formatting logic
 - `Tests/NetworkMonitorCoreTests`: unit tests for core behavior
-- `script/build_and_run.sh`: local build, run, verification, and DMG packaging helper
+- `script/build_and_run.sh`: local build, run, verification, and app bundle helper
 
 ## GitHub About
 
