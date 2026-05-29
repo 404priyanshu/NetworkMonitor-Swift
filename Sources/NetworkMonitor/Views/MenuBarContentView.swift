@@ -6,20 +6,42 @@ struct MenuBarContentView: View {
     @ObservedObject var sampler: StatusSampler
 
     var body: some View {
-        Text("Down: \(ByteFormat.rate(sampler.status.networkRates.downloadBytesPerSecond))")
-        Text("Up: \(ByteFormat.rate(sampler.status.networkRates.uploadBytesPerSecond))")
+        Label("Network Monitor", systemImage: "waveform.path.ecg")
+            .font(.headline)
+
         Divider()
-        Text("Disk free: \(ByteFormat.diskFree(sampler.status.diskSpace))")
-        Text("Disk total: \(ByteFormat.diskTotal(sampler.status.diskSpace))")
+
+        Label(
+            "Download  \(ByteFormat.rate(sampler.status.networkRates.downloadBytesPerSecond))",
+            systemImage: "arrow.down.circle.fill"
+        )
+        Label(
+            "Upload  \(ByteFormat.rate(sampler.status.networkRates.uploadBytesPerSecond))",
+            systemImage: "arrow.up.circle.fill"
+        )
+
         Divider()
-        Text("Updated: \(StatusDateFormat.time(sampler.status.updatedAt))")
-        Text("Status: \(statusText)")
+
+        Label("Disk Free  \(ByteFormat.diskFree(sampler.status.diskSpace))", systemImage: "internaldrive")
+        Label("Disk Total  \(ByteFormat.diskTotal(sampler.status.diskSpace))", systemImage: "internaldrive.fill")
+
         Divider()
-        Button("Refresh Now") {
+
+        Label("Updated  \(StatusDateFormat.time(sampler.status.updatedAt))", systemImage: "clock")
+        Label(statusText, systemImage: statusIconName)
+
+        Divider()
+
+        Button {
             sampler.refresh()
+        } label: {
+            Label("Refresh Now", systemImage: "arrow.clockwise")
         }
-        Button("Quit") {
+
+        Button {
             NSApplication.shared.terminate(nil)
+        } label: {
+            Label("Quit", systemImage: "power")
         }
     }
 
@@ -29,5 +51,13 @@ struct MenuBarContentView: View {
         }
 
         return sampler.isRunning ? "OK" : "Paused"
+    }
+
+    private var statusIconName: String {
+        if sampler.errorMessage != nil {
+            return "exclamationmark.triangle.fill"
+        }
+
+        return sampler.isRunning ? "checkmark.circle.fill" : "pause.circle.fill"
     }
 }
