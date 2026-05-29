@@ -3,8 +3,16 @@ set -euo pipefail
 
 MODE="${1:-run}"
 APP_NAME="NetworkMonitor"
-BUNDLE_ID="com.local.NetworkMonitor"
+BUNDLE_ID="com.ainz.NetworkMonitor"
+VERSION="1.0.0"
 MIN_SYSTEM_VERSION="13.0"
+CONFIGURATION="debug"
+
+case "$MODE" in
+  --release|release|--dmg|dmg)
+    CONFIGURATION="release"
+    ;;
+esac
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DIST_DIR="$ROOT_DIR/dist"
@@ -13,11 +21,12 @@ APP_CONTENTS="$APP_BUNDLE/Contents"
 APP_MACOS="$APP_CONTENTS/MacOS"
 APP_BINARY="$APP_MACOS/$APP_NAME"
 INFO_PLIST="$APP_CONTENTS/Info.plist"
+DMG_PATH="$DIST_DIR/$APP_NAME-$VERSION.dmg"
 
 pkill -x "$APP_NAME" >/dev/null 2>&1 || true
 
-swift build --package-path "$ROOT_DIR"
-BUILD_BINARY="$(swift build --package-path "$ROOT_DIR" --show-bin-path)/$APP_NAME"
+swift build --package-path "$ROOT_DIR" -c "$CONFIGURATION"
+BUILD_BINARY="$(swift build --package-path "$ROOT_DIR" -c "$CONFIGURATION" --show-bin-path)/$APP_NAME"
 
 rm -rf "$APP_BUNDLE"
 mkdir -p "$APP_MACOS"
@@ -35,6 +44,10 @@ cat >"$INFO_PLIST" <<PLIST
   <string>$BUNDLE_ID</string>
   <key>CFBundleName</key>
   <string>$APP_NAME</string>
+  <key>CFBundleShortVersionString</key>
+  <string>$VERSION</string>
+  <key>CFBundleVersion</key>
+  <string>1</string>
   <key>CFBundlePackageType</key>
   <string>APPL</string>
   <key>LSMinimumSystemVersion</key>
@@ -47,8 +60,15 @@ cat >"$INFO_PLIST" <<PLIST
 </plist>
 PLIST
 
+/usr/bin/codesign --force --deep --sign - "$APP_BUNDLE" >/dev/null
+
 open_app() {
   /usr/bin/open -n "$APP_BUNDLE"
+}
+
+create_dmg() {
+  rm -f "$DMG_PATH"
+  hdiutil create -volname "$APP_NAME" -srcfolder "$APP_BUNDLE" -ov -format UDZO "$DMG_PATH"
 }
 
 case "$MODE" in
@@ -57,6 +77,13 @@ case "$MODE" in
     ;;
   --debug|debug)
     lldb -- "$APP_BINARY"
+    ;;
+  --release|release)
+    printf 'Built %s\n' "$APP_BUNDLE"
+    ;;
+  --dmg|dmg)
+    create_dmg
+    printf 'Built %s\n' "$DMG_PATH"
     ;;
   --logs|logs)
     open_app
@@ -72,7 +99,7 @@ case "$MODE" in
     pgrep -x "$APP_NAME" >/dev/null
     ;;
   *)
-    echo "usage: $0 [run|--debug|--logs|--telemetry|--verify]" >&2
+    echo "usage: $0 [run|--release|--dmg|--debug|--logs|--telemetry|--verify]" >&2
     exit 2
     ;;
 esac
